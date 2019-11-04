@@ -1,4 +1,4 @@
-#!env python3
+#!env python3.7
 
 import asyncio
 import os
@@ -18,7 +18,7 @@ async def run(*args, _bg=False):
         p = await asyncio.create_subprocess_exec(*args, stdout=PIPE, stderr=PIPE)
         return await p.wait()
 
-async def mainline():
+async def main():
     proc = await asyncio.create_subprocess_exec(INOTIFYWAIT, '-m', '-r', '-e', 'close_write',
                                                 '--format', '%w%f', RECORDINGS, stdout=PIPE)
 
@@ -56,7 +56,4 @@ async def mainline():
             for delme in [chapters, filename + '.log', filename + '.vdr']:
                 os.remove(delme)
 
-loop = asyncio.get_event_loop()
-loop.run_until_complete(mainline())
-loop.stop()
-loop.close()
+asyncio.run(main())
