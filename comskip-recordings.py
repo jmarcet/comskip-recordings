@@ -23,8 +23,7 @@ async def main():
                                                 '--format', '%w%f', RECORDINGS, stdout=PIPE)
 
     while True:
-        line = await proc.stdout.readline()
-        recording = (line.decode()).rstrip()
+        recording = (await proc.stdout.readline()).decode().rstrip()
 
         if not os.path.exists(recording) or not os.path.isfile(recording):
             continue
