@@ -51,8 +51,14 @@ async def main():
             recording = filename + '.mpeg'
             print('(3/3) Commercial cutpoints FILENAME="%s" merged succesfully' % merged)
             print('    mv "%s" "%s"' % (merged, recording))
-            os.rename(merged, recording)
+            try:
+                os.rename(merged, recording)
+            except:
+                print('(3/3) FAILED: could not move "%s" to "%s"' % (merged, recording))
             for delme in [chapters, filename + '.log', filename + '.vdr']:
-                os.remove(delme)
+                try:
+                    os.remove(delme)
+                except FileNotFoundError:
+                    pass
 
 asyncio.run(main())
