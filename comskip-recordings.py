@@ -59,7 +59,7 @@ async def main():
             try:
                 os.rename(merged, recording)
             except:
-                print('(3/3) FAILED: could not move "%s" to "%s"' % (merged, recording))
+                print('      -> FAILED: could not move "%s" to "%s"' % (merged, recording))
             [ os.remove(x) for x in glob(filename + '.*') if not x.endswith('.txt') and not x.endswith('.mpeg') ]
 
 try:
