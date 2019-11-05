@@ -49,6 +49,9 @@ async def main():
             continue
 
         if recording.endswith('.mpeg'):
+            if os.path.exists(filename + '.txt'):
+                #print('(0/0) %s already processed' % recording)
+                continue
             print('(1/3) Recording FILENAME="%s" ended' % recording)
             print('    comskip --ini=%s "%s"' % (COMSKIP_INI, recording))
             asyncio.create_task(run(COMSKIP, '--ini=%s' % COMSKIP_INI, recording, _filename=filename))
