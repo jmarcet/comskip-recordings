@@ -66,4 +66,7 @@ async def main():
                 except FileNotFoundError:
                     pass
 
-asyncio.run(main())
+try:
+    asyncio.run(main())
+except KeyboardInterrupt:
+    print('Good bye!')
