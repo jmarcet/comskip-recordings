@@ -3,6 +3,7 @@
 import asyncio
 import os
 from asyncio.subprocess import DEVNULL, PIPE
+from glob import glob
 
 COMSKIP_INI = os.environ['HOME'] + '/comskip.ini'
 RECORDINGS  = '/storage/recordings'
@@ -43,6 +44,10 @@ async def main():
             merged    = filename + '.mpeg-merged'
             recording = filename + '.mpeg'
             print('(2/3) Chapters FILENAME="%s" generated' % chapters)
+            if os.path.getsize(chapters) == 132:
+                print('    No commercials found, skipping...')
+                [ os.remove(x) for x in glob(filename + '.*') if not x.endswith('.txt') and not x.endswith('.mpeg') ]
+                continue
             print('    mkvmerge -o "%s" --chapters "%s" "%s"' % (merged, chapters, recording))
             await run(MKVMERGE, '-o', merged, '--chapters', chapters, recording, _bg=True)
         elif recording.endswith('.mpeg-merged'):
