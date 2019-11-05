@@ -6,22 +6,35 @@ from asyncio.subprocess import DEVNULL, PIPE
 from glob import glob
 
 COMSKIP_INI = os.environ['HOME'] + '/comskip.ini'
-RECORDINGS  = '/storage/recordings'
+RECORDINGS = '/storage/recordings'
 
-COMSKIP     = '/usr/local/bin/comskip'
+COMSKIP = '/usr/local/bin/comskip'
 INOTIFYWAIT = '/usr/bin/inotifywait'
-MKVMERGE    = '/usr/bin/mkvmerge'
+MKVMERGE = '/usr/bin/mkvmerge'
 
-async def run(*args, _bg=False):
-    if _bg:
-        p = await asyncio.create_subprocess_exec(*args, stdout=DEVNULL, stderr=DEVNULL)
-    else:
-        p = await asyncio.create_subprocess_exec(*args, stdout=PIPE, stderr=PIPE)
-        return await p.wait()
+
+def cleanup(filename, _check=True):
+    [os.remove(x) for x in glob(filename + '.*') if not x.endswith('.txt') and not x.endswith('.mpeg')]
+    if _check and (not os.path.exists(filename + '.txt') or not os.path.getsize(filename + '.txt')):
+        if os.path.exists(filename + '.mpeg'):
+            print('[WARNING]: something went wrong analyzing %s.mpeg, marking as already processed' % filename)
+            with open(filename + '.txt', 'w') as f:
+                f.write('[WARNING]: something went wrong analyzing this video\n')
+        else:
+            print('[WARNING]: something went wrong analyzing %s.mpeg' % filename)
+
+
+async def run(*args, _filename=None):
+    if not _filename:
+        return await asyncio.create_subprocess_exec(*args, stdout=PIPE)
+    p = await asyncio.create_subprocess_exec(*args, stdout=DEVNULL, stderr=DEVNULL)
+    await p.wait()
+    if p.returncode != 0:
+        cleanup(_filename)
+
 
 async def main():
-    proc = await asyncio.create_subprocess_exec(INOTIFYWAIT, '-m', '-r', '-e', 'close_write',
-                                                '--format', '%w%f', RECORDINGS, stdout=PIPE)
+    proc = await run(INOTIFYWAIT, '-m', '-r', '-e', 'close_write', '--format', '%w%f', RECORDINGS)
 
     while True:
         recording = (await proc.stdout.readline()).decode().rstrip()
@@ -38,21 +51,22 @@ async def main():
         if recording.endswith('.mpeg'):
             print('(1/3) Recording FILENAME="%s" ended' % recording)
             print('    comskip --ini=%s "%s"' % (COMSKIP_INI, recording))
-            await run(COMSKIP, '--ini=%s' % COMSKIP_INI, recording, _bg=True)
+            asyncio.create_task(run(COMSKIP, '--ini=%s' % COMSKIP_INI, recording, _filename=filename))
+
         elif recording.endswith('.mkvtoolnix.chapters'):
-            chapters  = recording
-            merged    = filename + '.mpeg-merged'
+            chapters = recording
+            merged = filename + '.mpeg-merged'
             recording = filename + '.mpeg'
             print('(2/3) Chapters FILENAME="%s" generated' % chapters)
             if os.path.getsize(chapters) == 132:
                 print('    No commercials found, skipping...')
-                [ os.remove(x) for x in glob(filename + '.*') if not x.endswith('.txt') and not x.endswith('.mpeg') ]
+                cleanup(filename, _check=False)
                 continue
             print('    mkvmerge -o "%s" --chapters "%s" "%s"' % (merged, chapters, recording))
-            await run(MKVMERGE, '-o', merged, '--chapters', chapters, recording, _bg=True)
+            asyncio.create_task(run(MKVMERGE, '-o', merged, '--chapters', chapters, recording, _filename=filename))
+
         elif recording.endswith('.mpeg-merged'):
-            chapters  = filename + '.mkvtoolnix.chapters'
-            merged    = recording
+            merged = recording
             recording = filename + '.mpeg'
             print('(3/3) Commercial cutpoints FILENAME="%s" merged succesfully' % merged)
             print('    mv "%s" "%s"' % (merged, recording))
@@ -60,7 +74,7 @@ async def main():
                 os.rename(merged, recording)
             except:
                 print('      -> FAILED: could not move "%s" to "%s"' % (merged, recording))
-            [ os.remove(x) for x in glob(filename + '.*') if not x.endswith('.txt') and not x.endswith('.mpeg') ]
+            cleanup(filename)
 
 try:
     asyncio.run(main())
