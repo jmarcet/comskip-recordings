@@ -60,11 +60,7 @@ async def main():
                 os.rename(merged, recording)
             except:
                 print('(3/3) FAILED: could not move "%s" to "%s"' % (merged, recording))
-            for delme in [chapters, filename + '.log', filename + '.vdr']:
-                try:
-                    os.remove(delme)
-                except FileNotFoundError:
-                    pass
+            [ os.remove(x) for x in glob(filename + '.*') if not x.endswith('.txt') and not x.endswith('.mpeg') ]
 
 try:
     asyncio.run(main())
