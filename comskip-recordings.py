@@ -45,7 +45,7 @@ async def main():
     proc = await run(INOTIFYWAIT, '-m', '-r', '-e', 'close_write', '--format', '%w%f', RECORDINGS)
 
     while True:
-        recording = (await proc.stdout.readline()).decode().rstrip()
+        recording = (await proc.stdout.readline()).decode(encoding='latin1', errors='replace').rstrip()
 
         if recording.endswith('.mpeg') or recording.endswith('.mpeg-merged'):
             filename = os.path.splitext(recording)[0]
