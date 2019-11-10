@@ -1,0 +1,15 @@
+[Unit]
+Description=comskip-recordings service
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3.7 comskip-recordings.py
+ExecStop=/usr/bin/pkill -f comskip-recordings.py
+StandardOutput=file:/var/log/comskip.log
+StandardError=file:/var/log/comskip.log
+User=nobody
+Group=nogroup
+
+[Install]
+WantedBy=multi-user.target
