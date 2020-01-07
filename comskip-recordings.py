@@ -1,4 +1,4 @@
-#!env python3.7
+#!/usr/local/bin/python3.8 -u
 
 import asyncio
 import os
@@ -6,14 +6,14 @@ from asyncio.subprocess import DEVNULL, PIPE
 from glob import glob
 
 COMSKIP_INI = '/etc/comskip.ini'
-LOGFILE = '/var/log/comskip.log'
+LOGFILE = '/storage/recordings/comskip.log'
 RECORDINGS = '/storage/recordings'
 
-COMSKIP = '/usr/local/bin/comskip'
+COMSKIP = '/usr/bin/comskip'
 INOTIFYWAIT = '/usr/bin/inotifywait'
-IONICE = '/usr/bin/ionice'
+IONICE = '/bin/ionice'
 MKVMERGE = '/usr/bin/mkvmerge'
-NICE = '/usr/bin/nice'
+NICE = '/bin/nice'
 
 
 def log(text):

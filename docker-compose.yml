@@ -1,0 +1,20 @@
+version: '2.4'
+
+services:
+  comskip:
+    build: ./
+    container_name: comskip
+    restart: unless-stopped
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      - PUID=65534
+      - PGID=65534
+      - TZ=Europe/Madrid
+    volumes:
+      - /storage/recordings:/storage/recordings
+    cpus: 4
+    mem_limit: 4gb
+    memswap_limit: 4gb
+
+# vim: et ci pi sts=2 sw=2 ts=2
